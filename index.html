@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium FlexWork Calc | 유연근무제 계산기</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div id="app">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <span class="icon">⚡</span>
+                    <h1>FlexWork<span>Calc</span></h1>
+                </div>
+                <nav class="tabs">
+                    <button class="tab-btn active" data-tab="dashboard">대시보드</button>
+                    <button class="tab-btn" data-tab="calendar">2026 캘린더</button>
+                    <button class="tab-btn" data-tab="annual">연차 관리</button>
+                </nav>
+                <div class="period-selector glass">
+                    <div class="input-group">
+                        <label for="startDate">정산 시작일</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="input-group">
+                        <label for="endDate">정산 종료일</label>
+                        <input type="date" id="endDate">
+                    </div>
+                    <button id="setPeriodBtn" class="primary-btn">기간 설정</button>
+                </div>
+            </div>
+
+
+            <div class="action-buttons">
+                <button id="exportBtn" class="text-btn small">데이터 백업</button>
+                <button id="importBtn" class="text-btn small">데이터 복구</button>
+                <input type="file" id="importFile" style="display: none;" accept=".json">
+            </div>
+        </header>
+
+        <main>
+            <!-- Dashboard Tab -->
+            <section id="dashboardTab" class="tab-content active">
+                <section class="dashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card glass" id="totalWorkCard">
+                            <span class="label">총 유연근무 시간</span>
+                            <div class="value" id="totalWorkHours">00:00:00</div>
+                            <div class="indicator-bar"><div class="progress" id="workProgress"></div></div>
+                        </div>
+                        <div class="stat-card glass" id="targetWorkCard">
+                            <span class="label">목표 근로 시간</span>
+                            <div class="value" id="targetWorkHours">00:00:00</div>
+                            <span class="sub-label" id="daysInPeriod">0일 기준</span>
+                        </div>
+                        <div class="stat-card glass" id="remainingWorkCard">
+                            <span class="label">현재 시점 대비</span>
+                            <div class="value" id="remainingWorkHours">00:00:00</div>
+                            <span class="status-text" id="workStatusText">데이터를 입력하세요</span>
+                            <!-- Integrated AI Insight -->
+                            <div id="aiInsight" class="ai-insight" style="display: none;">
+                                <span class="ai-sparkle">✨</span>
+                                <span id="aiInsightText">분석 중...</span>
+                            </div>
+                        </div>
+                        <div class="stat-card glass holiday" id="holidayWorkCard">
+                            <span class="label">총 휴일 근로</span>
+                            <div class="value" id="totalHolidayHours">00:00:00</div>
+                            <span class="sub-label">유연근무 제외</span>
+                        </div>
+                    </div>
+
+                    <div class="alert-panel glass" id="week52Alert" style="display: none;">
+                        <span class="alert-icon">⚠️</span>
+                        <span class="alert-msg">주 52시간 초과 위험이 감지되었습니다!</span>
+                    </div>
+                </section>
+
+                <section class="entry-section glass">
+                    <div class="section-header">
+                        <h2>일별 근무 기록</h2>
+                        <div class="actions">
+                            <button id="addEntryBtn" class="secondary-btn">+ 기록 추가</button>
+                            <button id="aiScanBtn" class="primary-btn" style="background: linear-gradient(135deg, #6e8efb, #a777e3); margin-left: 0.5rem;">✨ AI 스캔</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="entryTable">
+                            <thead>
+                                <tr>
+                                    <th>날짜</th>
+                                    <th>구분</th>
+                                    <th>근무 시간 (HH:MM:SS)</th>
+                                    <th>상세 내역</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="entryList">
+                                <!-- Entries will be dynamic -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Calendar Tab -->
+            <section id="calendarTab" class="tab-content">
+                <section class="calendar-container glass">
+                    <div class="section-header">
+                        <h2>2026년 업무 & 휴일 캘린더</h2>
+                        <div class="calendar-legend">
+                            <span class="legend-item"><span class="dot holiday"></span>공휴일</span>
+                            <span class="legend-item"><span class="dot work"></span>근무일</span>
+                            <span class="legend-item"><span class="dot leave"></span>연차/휴가</span>
+                        </div>
+                    </div>
+                    <div id="calendarGrid" class="calendar-grid">
+                        <!-- 12 months will be generated here -->
+                    </div>
+                </section>
+            </section>
+
+            <!-- Annual Leave Tab -->
+            <section id="annualTab" class="tab-content">
+                <section class="annual-container glass">
+                    <div class="section-header">
+                        <h2>연차 사용 현황</h2>
+                        <div class="annual-summary">
+                            <div class="summary-item">
+                                <span class="label">총 사용 연차</span>
+                                <span class="value" id="totalAnnualCount">0.0개</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>날짜</th>
+                                    <th>구분</th>
+                                    <th>차감 일수</th>
+                                </tr>
+                            </thead>
+                            <tbody id="annualLeaveList">
+                                <!-- Annual leave entries -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 FlexWork Calc. Premium Productivity Tool.</p>
+        </footer>
+    </div>
+
+    <!-- Modal for adding/editing entries -->
+    <div id="entryModal" class="modal-overlay" style="display: none;">
+        <div class="modal glass">
+            <h3 id="modalTitle">근무 기록 추가</h3>
+            <form id="entryForm">
+                <input type="hidden" id="editEntryId">
+                <div class="input-group">
+                    <label for="entryDate">날짜</label>
+                    <input type="date" id="entryDate" required>
+                </div>
+                <div class="input-group">
+                    <label for="entryType">구분</label>
+                    <select id="entryType">
+                        <option value="work">정상 근무</option>
+                        <option value="holiday">휴일 근무 (유연외)</option>
+                        <option value="annual">연차 (간주 8h)</option>
+                        <option value="halfMorning">반차-오전 (간주 4h)</option>
+                        <option value="halfAfternoon">반차-오후 (간주 4h)</option>
+                    </select>
+                </div>
+                <div class="input-group-row">
+                    <div class="input-group">
+                        <label for="startTime">출근 시간</label>
+                        <input type="time" id="startTime" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="endTime">퇴근 시간</label>
+                        <input type="time" id="endTime" step="1">
+                    </div>
+                </div>
+                <div class="input-group" id="manualTimeGroup" style="display: none;">
+                    <label for="entryTime">직접 입력 (HH:MM:SS)</label>
+                    <input type="text" id="entryTime" placeholder="00:00:00" pattern="[0-9]{2}:[0-9]{2}:[0-9]{2}">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancelBtn" class="text-btn">취소</button>
+                    <button type="submit" class="primary-btn">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Deletion Confirmation -->
+    <div id="confirmModal" class="modal-overlay" style="display: none;">
+        <div class="modal glass confirm-modal">
+            <h3>기록 삭제</h3>
+            <p>이 기록을 정말 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.</p>
+            <div class="modal-actions">
+                <button id="confirmCancelBtn" class="text-btn">취소</button>
+                <button id="confirmDeleteBtn" class="secondary-btn" style="background:#ff4d4d">삭제하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for AI Scanning -->
+    <div id="aiScanModal" class="modal-overlay" style="display: none;">
+        <div class="modal glass scan-modal">
+            <div class="modal-header">
+                <h3>지능형 데이터 스캔 (Beta)</h3>
+                <button class="close-btn" onclick="hideModal('aiScanModal')">&times;</button>
+            </div>
+            <p>근무 시스템의 화면을 캡처한 이미지를 업로드하거나, 테이블의 텍스트를 복사해서 아래에 붙여넣으세요.</p>
+            
+            <div class="scan-tabs">
+                <button class="scan-tab active" data-mode="text">텍스트 붙여넣기</button>
+                <button class="scan-tab" data-mode="image">스크린샷 업로드</button>
+            </div>
+
+            <div id="textScanArea" class="scan-content">
+                <textarea id="rawTextArea" placeholder="예: 16 월 09:20:34 17:15:26 ..."></textarea>
+                <button id="parseTextBtn" class="primary-btn w-100">데이터 분석하기</button>
+            </div>
+
+            <div id="imageScanArea" class="scan-content" style="display: none;">
+                <div class="drop-zone" id="dropZone">
+                    <p>이미지를 여기에 드래그하거나 클릭하여 업로드</p>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                </div>
+            </div>
+
+            <div id="scanResultArea" style="display: none; margin-top: 1.5rem;">
+                <h4>분석 결과</h4>
+                <div class="table-container mini">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th>시간</th>
+                                <th>구분</th>
+                                <th>선택</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scanResultList"></tbody>
+                    </table>
+                </div>
+                <div class="modal-actions">
+                    <button id="saveScannedBtn" class="primary-btn">선택한 항목 저장하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chatbot UI -->
+    <div id="aiChatBtn" class="ai-chat-fab">
+        <span class="pulse"></span>
+        ✨
+    </div>
+
+    <div id="aiChatModal" class="chat-modal glass">
+        <div class="chat-header">
+            <div class="header-info">
+                <span class="bot-icon">🤖</span>
+                <div>
+                    <h3>AI 에어전트</h3>
+                    <div class="header-status">
+                        <span id="apiStatus" class="online-status">Online</span>
+                        <button onclick="toggleApiSettings()" class="settings-btn" title="API 설정">⚙️</button>
+                    </div>
+                </div>
+            </div>
+            <button onclick="toggleChat()" class="close-chat-btn">&times;</button>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+            <div class="msg bot">안녕하세요! Gemini API 키를 설정하면 더 똑똑한 에이전트와 대화할 수 있습니다.</div>
+        </div>
+        <div id="typingIndicator" class="typing-indicator" style="display:none;">
+            <span></span><span></span><span></span>
+        </div>
+        
+        <!-- API Settings Panel -->
+        <div id="apiSettingsPanel" class="api-settings-panel" style="display: none;">
+            <h4>Gemini AI 에이전트 설정</h4>
+            <div class="input-group">
+                <input type="password" id="apiKeyInput" placeholder="Gemini API 키를 입력하세요">
+            </div>
+            
+            <div id="modelSelectionArea" style="margin: 0.8rem 0; display: none;">
+                <label style="font-size: 0.75rem; color: #aaa; display: block; margin-bottom: 4px;">사용 가능한 모델:</label>
+                <select id="modelSelect" style="width: 100%; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <option value="">모델을 로드 중입니다...</option>
+                </select>
+                <p style="font-size: 0.7rem; color: #888; margin-top: 4px;">* 할당량 오류 시 다른 모델을 선택해 보세요.</p>
+            </div>
+
+            <div id="apiErrorMsg" class="error-msg" style="display: none; color: #ff4d4d; font-size: 0.8rem; margin-top: 0.5rem;"></div>
+            
+            <div style="margin: 1rem 0; padding-top: 1rem; border-top: 1px dashed #444;">
+                <p style="font-size: 0.75rem; color: #aaa; margin-bottom: 8px;">대안 AI (로컬 모델):</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="useOllama()" class="text-btn" style="color: #ff8c00; font-size: 0.85rem; padding: 0;">🦙 Ollama 모드 전환</button>
+                    <button onclick="testOllamaConnection()" class="text-btn" style="color: #00ff88; font-size: 0.75rem; padding: 0;">(연결 테스트)</button>
+                    <button onclick="fetchOllamaModels()" class="text-btn" style="color: #6e8efb; font-size: 0.75rem; padding: 0;">(모델 목록 새로고침)</button>
+                </div>
+                <div id="ollamaModelArea" style="margin-top: 8px; display: none;">
+                    <select id="ollamaModelSelect" onchange="saveOllamaModel(this.value)" style="width: 100%; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 4px; font-size: 0.8rem;">
+                        <option value="">모델을 선택하세요...</option>
+                    </select>
+                </div>
+                <p id="ollamaTestLogs" style="font-size: 0.65rem; color: #888; margin-top: 4px; display: none;"></p>
+                <p style="font-size: 0.65rem; color: #666; margin-top: 4px;">* Ollama가 실행 중이어야 합니다.</p>
+            </div>
+            
+            <div class="settings-actions">
+                <button onclick="saveApiKey()" class="save-btn">저장 및 조회</button>
+                <button onclick="toggleApiSettings()" class="cancel-btn">취소</button>
+            </div>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="key-link" style="display:block; margin-top:0.8rem; font-size:0.75rem; text-decoration:none; color:#6e8efb; text-align:center;">키 발급받기 ↗</a>
+        </div>
+        
+        <div class="chat-footer">
+            <div id="chatQuickActions" class="chat-quick-actions">
+                <button class="quick-chip" onclick="handleQuickQuery('이번 주 얼마나 일했어?')">📊 이번 주 현황</button>
+                <button class="quick-chip" onclick="handleQuickQuery('언제 퇴근해?')">🕒 퇴근 추천</button>
+                <button class="quick-chip" onclick="handleQuickQuery('코어 타임 알려줘')">💡 코어 타임</button>
+            </div>
+            <div class="chat-input-wrapper">
+                <input type="text" id="chatInput" placeholder="궁금한 점을 물어보세요..." onkeypress="if(event.key==='Enter') sendChat()">
+                <button onclick="sendChat()" class="chat-send-btn">
+                    <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
